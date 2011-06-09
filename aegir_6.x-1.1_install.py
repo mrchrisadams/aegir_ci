@@ -166,7 +166,8 @@ def main():
 		node = conn.create_node(name=hostname, image=preferred_image[0], size=preferred_size[0])
         except:
 		print "Error provisioning new node"
-		traceback.print_exc()
+		e = traceback.print_exc()
+                raise SystemError(e)
 
         print "Provisioning complete, you can ssh as root to %s" % node.public_ip[0]
         if node.extra.get('password'):
@@ -201,8 +202,12 @@ def main():
 				                run_platform_tests()
 				                run_site_tests()
 
+					        print "===> Destroying this node"
+					        conn.destroy_node(node)
+
 				        except:
-				                traceback.print_exc()
+				                e = traceback.print_exc()
+				                raise SystemError(e)
 
                                         var = 2
                                         break
@@ -211,9 +216,6 @@ def main():
                                         time.sleep(20)
                                         continue
 
-
-        print "===> Destroying this node"
-        conn.destroy_node(node)
 
 if __name__ == "__main__":
         main()
