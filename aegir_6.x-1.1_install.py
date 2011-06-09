@@ -42,7 +42,7 @@ trusted_ip = config.get('Aegir', 'trusted_ip')
 # Where our build files are
 builds_repo = config.get('Aegir', 'builds_repo')
 
-hostname = 'aegirjenkins-%d' % random.randrange(0, 101, 2)
+hostname = 'aegirjenkins-%d' % random.randrange(0, 10001, 2)
 
 # Some basic dependency tests for this job itself
 def dependency_check():
