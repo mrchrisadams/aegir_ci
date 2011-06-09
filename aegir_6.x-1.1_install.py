@@ -2,7 +2,7 @@
 #
 # Libcloud tool to build Rackspace VPS, install Aegir and build makefile-based Drupal projects
 # Designed for use as a Jenkins project, works from CLI just fine though
-# Dependencies: libcloud, fabric, and a public key in your ~/.ssh directory
+# Dependencies: libcloud, fabric
 #
 # Written by Miguel Jacq (mig5) of Green Bee Digital and the Aegir project
 # http://greenbeedigital.com.au
@@ -10,7 +10,6 @@
 
 from libcloud.compute.types import Provider
 from libcloud.compute.providers import get_driver
-from libcloud.compute.deployment import MultiStepDeployment, ScriptDeployment, SSHKeyDeployment
 from libcloud.compute.ssh import SSHClient, ParamikoSSHClient
 import libcloud.security
 import os, sys, string, ConfigParser, socket, time, random, traceback
@@ -43,13 +42,10 @@ trusted_ip = config.get('Aegir', 'trusted_ip')
 # Where our build files are
 builds_repo = config.get('Aegir', 'builds_repo')
 
+hostname = 'aegirjenkins-%d' % random.randrange(0, 101, 2)
+
 # Some basic dependency tests for this job itself
 def dependency_check():
-        try:   
-                open(os.path.expanduser("~/.ssh/id_rsa.pub")).read()
-        except IOError:
-                print "You need at least a public key called id_rsa.pub in your .ssh directory"
-                sys.exit(1)
         try:   
                 import fabric                                   
 
@@ -167,7 +163,7 @@ def main():
         # Create and deploy a new server now, and run the deployment steps defined above
         print "Provisioning server and running deployment processes"
         try:
-		node = conn.create_node(name='aegir', image=preferred_image[0], size=preferred_size[0])
+		node = conn.create_node(name=hostname, image=preferred_image[0], size=preferred_size[0])
         except:
 		print "Error provisioning new node"
 		traceback.print_exc()
@@ -175,31 +171,46 @@ def main():
         print "Provisioning complete, you can ssh as root to %s" % node.public_ip[0]
         if node.extra.get('password'):
                 print "The root user's password is %s" % node.extra.get('password')
+		password = node.extra.get('password')
+	
 
-	# When create_node is used and not deploy_node, it can take a while for networking to come up
-	# On the other hand, deploy_node is buggy in the latest libcloud and always exits with a fail
-	# even when it succeeds...
-	time.sleep(20)
+        # VPS aren't immediately available after provisioning sometimes
+        # Let's try and loop until the node state is 'Running'.
 
-        # Setting some parameters for fabric
-        domain = socket.getfqdn(node.public_ip[0])
-        fabric.env.host_string = domain
-        fabric.env.user = 'root'
-	fabric.env.password = node.extra.get('password')
+        var = 1
+        while var == 1:
+                nodes = conn.list_nodes()
+                for node in nodes: 
+                        if hostname in node.name:
+                                if node.state == 0:
+				        # Setting some parameters for fabric
+				        domain = socket.getfqdn(node.public_ip[0])
+				        fabric.env.host_string = domain
+				        fabric.env.user = 'root'
+				        fabric.env.password = password
 
-        try:
-                fab_prepare_firewall()
-		fab_install_dependencies(newpass)
-                fab_prepare_apache()
-		fab_prepare_php()
-                fab_prepare_user()
-                fab_fetch_drush()
-                fab_fetch_provision()
-                fab_hostmaster_install(domain, email, newpass)
-                run_platform_tests()
-                run_site_tests()
-        except:
-		traceback.print_exc()
+				        try:
+				                fab_prepare_firewall()
+				                fab_install_dependencies(newpass)
+				                fab_prepare_apache()
+				                fab_prepare_php()
+				                fab_prepare_user()
+				                fab_fetch_drush()
+				                fab_fetch_provision()
+				                fab_hostmaster_install(domain, email, newpass)
+				                run_platform_tests()
+				                run_site_tests()
+
+				        except:
+				                traceback.print_exc()
+
+                                        var = 2
+                                        break
+                                else:
+                                        print "New host doesn't seem booted yet. Sleeping and will try again in 20 secs..."
+                                        time.sleep(20)
+                                        continue
+
 
         print "===> Destroying this node"
         conn.destroy_node(node)
