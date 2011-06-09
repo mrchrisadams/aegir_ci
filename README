@@ -1,0 +1,10 @@
+This python script interacts with Libcloud API to build a VPS (by default at Rackspace Cloud) and install Aegir.
+
+It's then designed to fetch Drush Make stub files from a public URL (such as your github repo of make files) and 
+build your projects as platforms, finishing up by doing a test site install on that platform using the relevant
+install profile.
+
+Designed to be plugged straight into Jenkins projects as an 'Execute shell' build step, and optionally scheduled
+or triggered by changes in your module/install profile's git repo or similar.
+
+Read about it at http://greenbeedigital.com.au/content/test-your-drupal-distro-building-continuous-integration-server-aegir-jenkins
