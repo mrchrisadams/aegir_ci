@@ -19,7 +19,7 @@ libcloud.security.VERIFY_SSL_CERT = True
 
 # Fetch some values from the config file
 config = ConfigParser.RawConfigParser()
-config.read(os.path.expanduser("~/aegir_ci_config.ini"))
+config.read(os.path.expanduser("~/aegir_ci/aegir_ci_config.ini"))
 
 # Try to abstract the provider here, as we may end up supporting others
 # Theoretically since we are using libcloud, it should support any
