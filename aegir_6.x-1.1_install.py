@@ -167,7 +167,7 @@ def main():
         except:
 		print "Error provisioning new node"
 		e = traceback.print_exc()
-                raise SystemError(e)
+                raise SystemExit(e)
 
         print "Provisioning complete, you can ssh as root to %s" % node.public_ip[0]
         if node.extra.get('password'):
@@ -207,7 +207,7 @@ def main():
 
 				        except:
 				                e = traceback.print_exc()
-				                raise SystemError(e)
+				                raise SystemExit(e)
 
                                         var = 2
                                         break
