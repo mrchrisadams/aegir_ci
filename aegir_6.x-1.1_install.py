@@ -93,7 +93,7 @@ def fab_prepare_user():
 # Fabric command to fetch Drush
 def fab_fetch_drush():
         print "===> Fetching Drush"
-        fabric.run("su - -s /bin/sh aegir -c'wget http://ftp.drupal.org/files/projects/drush-7.x-4.4.tar.gz'", pty=True)
+        fabric.run("su - -s /bin/sh aegir -c 'wget http://ftp.drupal.org/files/projects/drush-7.x-4.4.tar.gz'", pty=True)
         fabric.run("su - -s /bin/sh aegir -c' gunzip -c drush-7.x-4.4.tar.gz | tar -xf - '", pty=True)
         fabric.run("su - -s /bin/sh aegir -c 'rm /var/aegir/drush-7.x-4.4.tar.gz'", pty=True)
 
@@ -156,8 +156,6 @@ def main():
 
         # We'll use the distro and size from the config ini
         preferred_image = [image for image in images if config_distro in image.name]
-        assert len(preferred_image) == 1, "We found more than one image for %s, will be assuming the first one" % config_distro
-
         preferred_size = [size for size in sizes if config_size in size.name]
 
         # Create and deploy a new server now, and run the deployment steps defined above
